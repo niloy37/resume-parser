@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resume - Prolog Resume Screening{% endblock %}
+
+{% block content %}
+<div class="center">
+    <h1>📄 Upload Resume</h1>
+    <p style="font-size: 1.1rem; color: #7f8c8d; margin-bottom: 30px;">
+        Upload a resume file to get instant Prolog-based screening analysis
+    </p>
+</div>
+
+<form id="uploadForm" method="POST" enctype="multipart/form-data" action="{{ url_for('upload_resume') }}">
+    <div class="upload-area" id="uploadArea">
+        <div style="font-size: 4rem; margin-bottom: 20px; color: #bdc3c7;">📁</div>
+        <h3 style="margin-bottom: 15px; color: #34495e;">Drop your resume here</h3>
+        <p style="color: #7f8c8d; margin-bottom: 25px;">
+            Supports PDF, DOCX, and TXT files (max 16MB)
+        </p>
+        
+        <input type="file" id="fileInput" name="file" class="file-input" accept=".pdf,.docx,.txt">
+        <label for="fileInput" class="file-label">
+            Choose File
+        </label>
+        
+        <div id="fileInfo" style="margin-top: 20px; display: none;">
+            <p id="fileName" style="color: #27ae60; font-weight: bold;"></p>
+            <p id="fileSize" style="color: #7f8c8d; font-size: 0.9rem;"></p>
+        </div>
+    </div>
+    
+    <div class="center">
+        <button type="submit" class="btn btn-large" id="submitBtn" disabled>
+            🧠 Analyze with Prolog
+        </button>
+    </div>
+</form>
+
+<div style="margin-top: 40px; padding: 25px; background: #e8f4fd; border-radius: 15px; border-left: 4px solid #3498db;">
+    <h3 style="color: #2980b9; margin-bottom: 15px;">💡 What happens next?</h3>
+    <ol style="color: #34495e; line-height: 1.8;">
+        <li><strong>Text Extraction:</strong> We extract text content from your resume file</li>
+        <li><strong>Data Parsing:</strong> AI identifies key information like skills, education, and experience</li>
+        <li><strong>Prolog Rules:</strong> Our rule engine evaluates the candidate against multiple criteria</li>
+        <li><strong>Decision:</strong> Get a clear hiring recommendation with detailed explanations</li>
+    </ol>
+</div>
+
+<div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+    <div style="padding: 20px; background: #fff3cd; border-radius: 10px; border-left: 3px solid #ffc107;">
+        <h4 style="color: #856404; margin-bottom: 10px;">📊 Evaluation Criteria</h4>
+        <ul style="color: #856404; font-size: 0.9rem; list-style: none; padding: 0;">
+            <li>✓ Education Level</li>
+            <li>✓ Years of Experience</li>
+            <li>✓ Programming Skills</li>
+            <li>✓ Technology Stack</li>
+        </ul>
+    </div>
+    
+    <div style="padding: 20px; background: #d5edda; border-radius: 10px; border-left: 3px solid #28a745;">
+        <h4 style="color: #155724; margin-bottom: 10px;">🎯 Decision Types</h4>
+        <ul style="color: #155724; font-size: 0.9rem; list-style: none; padding: 0;">
+            <li>✓ HIRE (Strong match)</li>
+            <li>✓ CONSIDER (Good potential)</li>
+            <li>✓ REJECT (Below threshold)</li>
+        </ul>
+    </div>
+    
+    <div style="padding: 20px; background: #f8d7da; border-radius: 10px; border-left: 3px solid #dc3545;">
+        <h4 style="color: #721c24; margin-bottom: 10px;">🔒 Privacy</h4>
+        <ul style="color: #721c24; font-size: 0.9rem; list-style: none; padding: 0;">
+            <li>✓ Files stored temporarily</li>
+            <li>✓ No data sharing</li>
+            <li>✓ Secure processing</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+        if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|docx|txt)$/i)) {
+            alert('Please upload a PDF, DOCX, or TXT file.');
+            return;
+        }
+        
+        // Validate file size (16MB)
+        if (file.size > 16 * 1024 * 1024) {
+            alert('File size must be less than 16MB.');
+            return;
+        }
+        
+        // Show file info
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.style.display = 'block';
+        submitBtn.disabled = false;
+        
+        // Update upload area appearance
+        uploadArea.style.borderColor = '#27ae60';
+        uploadArea.style.background = '#d5edda';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Form submission with loading state
+    uploadForm.addEventListener('submit', function(e) {
+        submitBtn.innerHTML = '⏳ Processing...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %} 

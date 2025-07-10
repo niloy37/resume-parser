@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}All Results - Prolog Resume Screening{% endblock %}
+
+{% block content %}
+<div class="center mb-20">
+    <h1>📊 Screening Results</h1>
+    <p style="color: #7f8c8d;">All candidate evaluations from the Prolog engine</p>
+</div>
+
+{% if candidates %}
+<div style="margin-bottom: 30px; text-align: center;">
+    <p style="color: #34495e; font-size: 1.1rem;">
+        Total Candidates Screened: <strong>{{ candidates|length }}</strong>
+    </p>
+</div>
+
+<div style="display: grid; gap: 20px;">
+    {% for candidate in candidates %}
+        {% set result = results|selectattr('candidate_id', 'equalto', candidate.id)|first %}
+        <div class="result-card decision-{{ result.decision.lower() if result else 'pending' }}">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3 style="margin-bottom: 10px;">
+                        {{ candidate.name }}
+                    </h3>
+                    
+                    {% if result %}
+                    <div class="decision-badge badge-{{ result.decision.lower() }}">
+                        {{ result.decision }}
+                    </div>
+                    <p style="margin: 10px 0; color: #6c757d;">
+                        {{ result.recommendation[:100] }}...
+                    </p>
+                    {% else %}
+                    <div class="decision-badge" style="background: #e9ecef; color: #6c757d;">
+                        PENDING
+                    </div>
+                    {% endif %}
+                    
+                    <div style="margin-top: 15px;">
+                        <small style="color: #6c757d;">
+                            <strong>Experience:</strong> {{ candidate.years_experience }} years
+                            | <strong>Skills:</strong> {{ candidate.skills|length }} identified
+                            | <strong>Uploaded:</strong> {{ candidate.upload_time[:10] }}
+                        </small>
+                    </div>
+                </div>
+                
+                <div style="text-align: right; min-width: 150px;">
+                    {% if result %}
+                    <div style="margin-bottom: 10px;">
+                        <div class="confidence-bar" style="width: 120px;">
+                            <div class="confidence-fill" style="width: {{ (result.confidence * 100)|round(1) }}%;"></div>
+                        </div>
+                        <small style="color: #7f8c8d;">{{ (result.confidence * 100)|round(1) }}% confidence</small>
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('results', candidate_id=candidate.id) }}" class="btn" style="padding: 8px 16px; font-size: 0.9rem;">
+                        View Details
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Skills Preview -->
+            <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for skill in candidate.skills[:6] %}
+                    <span style="background: #f8f9fa; color: #495057; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">{{ skill }}</span>
+                {% endfor %}
+                {% if candidate.skills|length > 6 %}
+                    <span style="color: #6c757d; font-size: 0.8rem;">+{{ candidate.skills|length - 6 }} more</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="center">
+    <div style="padding: 60px 40px; background: #f8f9fa; border-radius: 20px; margin: 40px 0;">
+        <div style="font-size: 4rem; margin-bottom: 20px; color: #dee2e6;">📭</div>
+        <h3 style="color: #6c757d; margin-bottom: 15px;">No Results Yet</h3>
+        <p style="color: #adb5bd; margin-bottom: 30px;">
+            Upload your first resume to see Prolog-based screening results here.
+        </p>
+        <a href="{{ url_for('upload_resume') }}" class="btn btn-large">
+            📄 Upload First Resume
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Summary Statistics -->
+{% if candidates %}
+<div style="margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+    {% set hire_count = results|selectattr('decision', 'equalto', 'HIRE')|list|length %}
+    {% set consider_count = results|selectattr('decision', 'equalto', 'CONSIDER')|list|length %}
+    {% set reject_count = results|selectattr('decision', 'equalto', 'REJECT')|list|length %}
+    
+    <div style="text-align: center; padding: 20px; background: #d5edda; border-radius: 15px;">
+        <h3 style="color: #155724; margin-bottom: 10px;">{{ hire_count }}</h3>
+        <p style="color: #155724; font-weight: bold;">HIRE</p>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 15px;">
+        <h3 style="color: #856404; margin-bottom: 10px;">{{ consider_count }}</h3>
+        <p style="color: #856404; font-weight: bold;">CONSIDER</p>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 15px;">
+        <h3 style="color: #721c24; margin-bottom: 10px;">{{ reject_count }}</h3>
+        <p style="color: #721c24; font-weight: bold;">REJECT</p>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; background: #e2e3e5; border-radius: 15px;">
+        <h3 style="color: #383d41; margin-bottom: 10px;">{{ candidates|length }}</h3>
+        <p style="color: #383d41; font-weight: bold;">TOTAL</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="center mt-30">
+    <a href="{{ url_for('upload_resume') }}" class="btn">
+        📄 Screen Another Resume
+    </a>
+</div>
+{% endblock %} 
