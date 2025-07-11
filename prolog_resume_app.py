@@ -821,6 +821,14 @@ def api_candidates():
     })
 
 if __name__ == '__main__':
-    print("🚀 Starting Resume Screening System")
-    print("📊 Open http://localhost:5002 in your browser")
-    app.run(host='0.0.0.0', port=5002, debug=True) 
+    import os
+    port = int(os.environ.get('PORT', 5002))
+    debug = os.environ.get('FLASK_ENV', 'development') != 'production'
+    
+    if debug:
+        print("🚀 Starting Resume Screening System (Development)")
+        print(f"📊 Open http://localhost:{port} in your browser")
+    else:
+        print("🚀 Starting Resume Screening System (Production)")
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)

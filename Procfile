@@ -1,0 +1,1 @@
+web: gunicorn --bind 0.0.0.0:$PORT prolog_resume_app:app 
