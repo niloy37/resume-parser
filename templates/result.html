@@ -24,11 +24,11 @@
             </p>
             
             <div style="margin-top: 20px;">
-                <strong>Confidence Score:</strong>
+                <strong>Overall Score:</strong>
                 <div class="confidence-bar">
-                    <div class="confidence-fill" style="width: {{ (result.confidence * 100)|round(1) }}%;"></div>
+                    <div class="confidence-fill" style="width: {{ result.total_score }}%;"></div>
                 </div>
-                <small style="color: #7f8c8d;">{{ (result.confidence * 100)|round(1) }}% confidence</small>
+                <small style="color: #7f8c8d;">{{ result.total_score }}% total score ({{ (result.confidence * 100)|round(1) }}% confidence)</small>
             </div>
         </div>
         
@@ -77,9 +77,42 @@
     </div>
 </div>
 
-<!-- Prolog Rules Analysis -->
+<!-- Detailed Scoring Breakdown -->
+{% if result.detailed_scores %}
 <div class="result-card">
-    <h2>🧠 Prolog Rules Evaluation</h2>
+    <h2>📊 Detailed Score Breakdown</h2>
+    <p style="color: #7f8c8d; margin-bottom: 20px;">
+        Weighted scoring based on customized requirements for <strong>{{ result.job_title }}</strong>:
+    </p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        {% for category, score in result.detailed_scores.items() %}
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 4px solid #667eea;">
+            <h4 style="color: #34495e; margin-bottom: 15px; text-transform: capitalize;">
+                {{ category.replace('_', ' ') }}
+            </h4>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="flex: 1;">
+                    <div style="width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                        <div style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: {{ score }}%; transition: width 1s ease;"></div>
+                    </div>
+                </div>
+                <div style="font-weight: bold; color: #2c3e50; min-width: 50px;">
+                    {{ score }}%
+                </div>
+            </div>
+            <small style="color: #6c757d; margin-top: 8px; display: block;">
+                Weight: {{ result.requirements_used[category + '_weight'] }}%
+            </small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Rules Analysis -->
+<div class="result-card">
+    <h2>🧠 Rules Evaluation</h2>
     <p style="color: #7f8c8d; margin-bottom: 20px;">
         Detailed breakdown of how each logical rule was evaluated for this candidate:
     </p>
@@ -116,36 +149,47 @@
     </a>
 </div>
 
-<!-- Prolog Logic Details -->
+<!-- Python Engine Details -->
 <div style="margin-top: 40px; padding: 25px; background: #f1f3f4; border-radius: 15px;">
-    <h3 style="color: #2c3e50;">🔍 How Our Prolog Engine Works</h3>
+    <h3 style="color: #2c3e50;">
+        🔍 Python-based Rule Engine
+    </h3>
+    
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        <strong>✅ Using Intelligent Python Rules</strong> - This analysis was powered by sophisticated Python-based logic with customizable requirements and weighted scoring.
+    </div>
+    
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
         <div>
-            <h4 style="color: #34495e;">Basic Rules</h4>
+            <h4 style="color: #34495e;">Engine Features</h4>
             <ul style="color: #6c757d; font-size: 0.9rem;">
-                <li>Education level (Bachelor, Master, PhD)</li>
-                <li>Years of experience (≥2 for experienced)</li>
-                <li>Programming language skills</li>
-                <li>Database technology knowledge</li>
+                <li>ML-enhanced skill extraction</li>
+                <li>Rule-based screening decisions</li>
+                <li>Contextual skill confidence scoring</li>
+                <li>Weighted scoring calculations</li>
+                <li>Dynamic rule evaluation</li>
             </ul>
         </div>
         
         <div>
-            <h4 style="color: #34495e;">Composite Rules</h4>
+            <h4 style="color: #34495e;">Python Rules</h4>
             <ul style="color: #6c757d; font-size: 0.9rem;">
-                <li>Qualified Developer = Education + Experience + Programming</li>
-                <li>Senior Developer = Qualified + 5+ years + Database</li>
-                <li>Web Developer = Qualified + Web Technologies</li>
+                <li><code>qualified_candidate()</code> - Basic qualification</li>
+                <li><code>recommended_candidate()</code> - Top-tier candidate</li>
+                <li><code>meets_education_requirement()</code> - Education check</li>
+                <li><code>has_required_skills()</code> - Skills validation</li>
+                <li>Real-time requirement updates</li>
             </ul>
         </div>
         
         <div>
             <h4 style="color: #34495e;">Decision Logic</h4>
             <ul style="color: #6c757d; font-size: 0.9rem;">
-                <li>HIRE: Senior Developer (95% confidence)</li>
-                <li>HIRE: Web Developer (85% confidence)</li>
-                <li>CONSIDER: Qualified Developer (75%)</li>
-                <li>REJECT: Below minimum requirements</li>
+                <li>HIRE: Score ≥85% + recommended_candidate()</li>
+                <li>CONSIDER: Score ≥70% + qualified_candidate()</li>
+                <li>MAYBE: Score ≥50%</li>
+                <li>REJECT: Score &lt;50%</li>
+                <li>Configurable scoring weights</li>
             </ul>
         </div>
     </div>
@@ -157,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         const confidenceFill = document.querySelector('.confidence-fill');
         if (confidenceFill) {
-            confidenceFill.style.width = '{{ (result.confidence * 100)|round(1) }}%';
+            confidenceFill.style.width = '{{ result.total_score }}%';
         }
     }, 500);
     

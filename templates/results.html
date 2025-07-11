@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}All Results - Prolog Resume Screening{% endblock %}
+{% block title %}All Results - Intelligent Resume Screening{% endblock %}
 
 {% block content %}
 <div class="center mb-20">
     <h1>📊 Screening Results</h1>
-    <p style="color: #7f8c8d;">All candidate evaluations from the Prolog engine</p>
+    <p style="color: #7f8c8d;">All candidate evaluations from the intelligent screening system</p>
 </div>
 
 {% if candidates %}
@@ -82,7 +82,7 @@
         <div style="font-size: 4rem; margin-bottom: 20px; color: #dee2e6;">📭</div>
         <h3 style="color: #6c757d; margin-bottom: 15px;">No Results Yet</h3>
         <p style="color: #adb5bd; margin-bottom: 30px;">
-            Upload your first resume to see Prolog-based screening results here.
+            Upload your first resume to see AI-powered screening results here.
         </p>
         <a href="{{ url_for('upload_resume') }}" class="btn btn-large">
             📄 Upload First Resume

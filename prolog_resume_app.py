@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Prolog Resume Screening System with Advanced NLP
-A minimal Flask app focused on Prolog-based resume analysis with real NLP parsing
+Resume Screening System with Advanced NLP
+A Flask app focused on intelligent resume analysis with customizable requirements
 """
 
 import os
@@ -36,7 +36,7 @@ except ImportError:
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'prolog-resume-screening-dev'
+app.config['SECRET_KEY'] = 'resume-screening-dev'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
@@ -46,6 +46,24 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # In-memory storage for demo (replace with database if needed)
 candidates = []
 screening_results = []
+
+# Default requirements storage
+default_requirements = {
+    'min_education': 'bachelor',
+    'min_experience': 2,
+    'senior_experience': 5,
+    'required_skills': ['Python', 'JavaScript', 'SQL'],
+    'preferred_skills': ['Docker', 'AWS', 'React'],
+    'job_title': 'Software Developer',
+    'job_category': 'software_development',
+    'education_weight': 20,
+    'experience_weight': 30,
+    'skills_weight': 40,
+    'preferred_weight': 10
+}
+
+# Current requirements (starts with defaults)
+current_requirements = default_requirements.copy()
 
 # Initialize NLP model
 nlp = None
@@ -285,7 +303,37 @@ class AdvancedResumeParser:
         return contact_info
     
     def extract_skills(self, text):
-        """Extract skills using NLP and contextual analysis"""
+        """Extract skills using ML-enhanced techniques with NLP fallback"""
+        
+        # Try ML-enhanced extraction first
+        try:
+            if not hasattr(self, 'ml_skill_extractor'):
+                from ml_skill_extractor import MLSkillExtractor
+                self.ml_skill_extractor = MLSkillExtractor()
+                print("✅ ML skill extraction enabled")
+            
+            # Use ML-enhanced extraction
+            ml_skills, detailed_analysis = self.ml_skill_extractor.extract_skills_with_details(text)
+            
+            # Store detailed analysis for potential future use
+            self.last_skill_analysis = detailed_analysis
+            
+            # Fallback to original method for additional skills
+            original_skills = self._extract_skills_original(text)
+            
+            # Combine and deduplicate
+            all_skills = list(set(ml_skills + original_skills))
+            return sorted(all_skills)
+            
+        except ImportError:
+            print("⚠️  ML skill extraction not available, using original method")
+            return self._extract_skills_original(text)
+        except Exception as e:
+            print(f"⚠️  Error in ML skill extraction: {e}, falling back to original")
+            return self._extract_skills_original(text)
+    
+    def _extract_skills_original(self, text):
+        """Original skill extraction method (preserved as fallback)"""
         skills = []
         text_lower = text.lower()
         
@@ -423,92 +471,210 @@ class AdvancedResumeParser:
             'name': contact_info['name'],
             'email': contact_info['email'],
             'phone': contact_info['phone'],
-            'skills': self.extract_skills(text),
+            'skills': self.extract_skills(text),  # Now uses ML-enhanced extraction
             'education': self.extract_education(text),
             'years_experience': self.extract_experience_years(text),
             'raw_text_length': len(text),
-            'nlp_enabled': self.nlp is not None
+            'nlp_enabled': self.nlp is not None,
+            'raw_text': text  # Store for potential future ML analysis
         }
+        
+        # Add ML skill analysis if available
+        if hasattr(self, 'last_skill_analysis'):
+            data['skill_analysis'] = self.last_skill_analysis
         
         return data
 
 # Initialize advanced parser
 resume_parser = AdvancedResumeParser()
 
-# Simple Prolog-like rule engine
-class PrologEngine:
-    def __init__(self):
-        self.facts = []
-        self.rules = [
-            # Education rules
-            ("high_education(X)", lambda x: any("bachelor" in edu.lower() or "master" in edu.lower() or "phd" in edu.lower() 
-                                               for edu in x.get('education', []))),
-            
-            # Experience rules
-            ("experienced(X)", lambda x: x.get('years_experience', 0) >= 2),
-            ("senior_level(X)", lambda x: x.get('years_experience', 0) >= 5),
-            
-            # Skills rules
-            ("has_programming_skills(X)", lambda x: any(skill.lower() in ['python', 'java', 'javascript', 'c++', 'c#'] 
-                                                        for skill in x.get('skills', []))),
-            ("has_database_skills(X)", lambda x: any(skill.lower() in ['mysql', 'postgresql', 'mongodb', 'sql'] 
-                                                     for skill in x.get('skills', []))),
-            ("has_web_skills(X)", lambda x: any(skill.lower() in ['html', 'css', 'react', 'angular', 'vue', 'flask', 'django'] 
-                                                for skill in x.get('skills', []))),
-            
-            # Decision rules
-            ("qualified_developer(X)", lambda x: self.evaluate("high_education(X)", x) and 
-                                                self.evaluate("experienced(X)", x) and 
-                                                self.evaluate("has_programming_skills(X)", x)),
-            
-            ("qualified_senior_developer(X)", lambda x: self.evaluate("qualified_developer(X)", x) and 
-                                                       self.evaluate("senior_level(X)", x) and 
-                                                       self.evaluate("has_database_skills(X)", x)),
-            
-            ("web_developer_candidate(X)", lambda x: self.evaluate("qualified_developer(X)", x) and 
-                                                    self.evaluate("has_web_skills(X)", x)),
-        ]
+# Rule-based resume screening engine (preserved from original system)
+class ResumeScreeningEngine:
+    def __init__(self, requirements=None):
+        self.requirements = requirements or current_requirements
+        print("✅ Rule-based screening engine initialized")
+        print("🧠 Using intelligent rule-based logic for resume screening!")
+        print("📊 Skills extraction enhanced with ML, screening rules preserved")
     
-    def evaluate(self, rule_name, candidate_data):
-        """Evaluate a rule against candidate data"""
-        for rule, condition in self.rules:
-            if rule == rule_name:
-                try:
-                    return condition(candidate_data)
-                except:
-                    return False
+    def meets_education_requirement(self, candidate_data):
+        """Check if candidate meets education requirements"""
+        if self.requirements['min_education'] == 'none':
+            return True
+        
+        education_list = candidate_data.get('education', [])
+        education_text = ' '.join(education_list).lower()
+        
+        if self.requirements['min_education'] == 'bachelor':
+            return any(level in education_text for level in ['bachelor', 'master', 'phd', 'bsc', 'ba', 'bs'])
+        elif self.requirements['min_education'] == 'master':
+            return any(level in education_text for level in ['master', 'phd', 'msc', 'ma', 'ms', 'mba'])
+        elif self.requirements['min_education'] == 'phd':
+            return any(level in education_text for level in ['phd', 'doctorate', 'doctoral'])
+        
         return False
     
+    def meets_experience_requirement(self, candidate_data):
+        """Check if candidate meets experience requirements"""
+        return candidate_data.get('years_experience', 0) >= self.requirements['min_experience']
+    
+    def is_senior_level(self, candidate_data):
+        """Check if candidate is at senior level"""
+        return candidate_data.get('years_experience', 0) >= self.requirements['senior_experience']
+    
+    def has_required_skills(self, candidate_data):
+        """Check if candidate has required skills"""
+        if not self.requirements['required_skills']:
+            return True
+        
+        candidate_skills = [skill.lower() for skill in candidate_data.get('skills', [])]
+        required_skills = [skill.lower().strip() for skill in self.requirements['required_skills']]
+        
+        # Check if candidate has at least 70% of required skills
+        matched_skills = sum(1 for req_skill in required_skills 
+                           if any(req_skill in cand_skill or cand_skill in req_skill 
+                                 for cand_skill in candidate_skills))
+        
+        return matched_skills >= (len(required_skills) * 0.7)
+    
+    def has_preferred_skills(self, candidate_data):
+        """Check if candidate has preferred skills"""
+        if not self.requirements['preferred_skills']:
+            return True
+        
+        candidate_skills = [skill.lower() for skill in candidate_data.get('skills', [])]
+        preferred_skills = [skill.lower().strip() for skill in self.requirements['preferred_skills']]
+        
+        # Check if candidate has at least one preferred skill
+        return any(pref_skill in cand_skill or cand_skill in pref_skill 
+                  for pref_skill in preferred_skills 
+                  for cand_skill in candidate_skills)
+    
+    def qualified_candidate(self, candidate_data):
+        """Check if candidate is qualified based on requirements"""
+        return (self.meets_education_requirement(candidate_data) and
+                self.meets_experience_requirement(candidate_data) and
+                self.has_required_skills(candidate_data))
+    
+    def recommended_candidate(self, candidate_data):
+        """Check if candidate is highly recommended"""
+        return (self.qualified_candidate(candidate_data) and
+                self.is_senior_level(candidate_data) and
+                self.has_preferred_skills(candidate_data))
+    
+    def calculate_score(self, candidate_data):
+        """Calculate weighted score based on requirements"""
+        scores = {}
+        
+        # Education score
+        if self.meets_education_requirement(candidate_data):
+            education_list = candidate_data.get('education', [])
+            education_text = ' '.join(education_list).lower()
+            if any(level in education_text for level in ['phd', 'doctorate']):
+                scores['education'] = 100
+            elif any(level in education_text for level in ['master', 'msc', 'ma', 'ms', 'mba']):
+                scores['education'] = 80
+            elif any(level in education_text for level in ['bachelor', 'bsc', 'ba', 'bs']):
+                scores['education'] = 60
+            else:
+                scores['education'] = 40
+        else:
+            scores['education'] = 0
+        
+        # Experience score
+        years_exp = candidate_data.get('years_experience', 0)
+        if years_exp >= self.requirements['senior_experience']:
+            scores['experience'] = 100
+        elif years_exp >= self.requirements['min_experience']:
+            scores['experience'] = 70
+        else:
+            scores['experience'] = max(0, (years_exp / self.requirements['min_experience']) * 50)
+        
+        # Required skills score
+        candidate_skills = [skill.lower() for skill in candidate_data.get('skills', [])]
+        required_skills = [skill.lower().strip() for skill in self.requirements['required_skills']]
+        
+        if required_skills:
+            matched_skills = sum(1 for req_skill in required_skills 
+                               if any(req_skill in cand_skill or cand_skill in req_skill 
+                                     for cand_skill in candidate_skills))
+            scores['skills'] = (matched_skills / len(required_skills)) * 100
+        else:
+            scores['skills'] = 100
+        
+        # Preferred skills score
+        preferred_skills = [skill.lower().strip() for skill in self.requirements['preferred_skills']]
+        if preferred_skills:
+            matched_preferred = sum(1 for pref_skill in preferred_skills 
+                                  if any(pref_skill in cand_skill or cand_skill in pref_skill 
+                                        for cand_skill in candidate_skills))
+            scores['preferred'] = (matched_preferred / len(preferred_skills)) * 100
+        else:
+            scores['preferred'] = 100
+        
+        # Calculate weighted total
+        total_score = (
+            scores['education'] * (self.requirements['education_weight'] / 100) +
+            scores['experience'] * (self.requirements['experience_weight'] / 100) +
+            scores['skills'] * (self.requirements['skills_weight'] / 100) +
+            scores['preferred'] * (self.requirements['preferred_weight'] / 100)
+        )
+        
+        return total_score, scores
+    
+    def update_requirements(self, new_requirements):
+        """Update requirements"""
+        self.requirements = new_requirements
+    
     def screen_candidate(self, candidate_data):
-        """Run complete screening analysis"""
+        """Run complete screening analysis using Python-based rules"""
         results = {}
         explanation = []
         
-        # Evaluate all rules
-        for rule, _ in self.rules:
-            rule_name = rule.replace("(X)", "").replace("_", " ").title()
-            results[rule_name] = self.evaluate(rule, candidate_data)
-            if results[rule_name]:
-                explanation.append(f"✓ {rule_name}")
-            else:
-                explanation.append(f"✗ {rule_name}")
+        # Calculate detailed score
+        total_score, detailed_scores = self.calculate_score(candidate_data)
         
-        # Make final decision
-        if self.evaluate("qualified_senior_developer(X)", candidate_data):
+        # Define rules to evaluate
+        rules_to_check = [
+            ("meets_education_requirement", "Meets Education Requirement"),
+            ("meets_experience_requirement", "Meets Experience Requirement"),
+            ("is_senior_level", "Is Senior Level"),
+            ("has_required_skills", "Has Required Skills"),
+            ("has_preferred_skills", "Has Preferred Skills"),
+            ("qualified_candidate", "Qualified Candidate"),
+            ("recommended_candidate", "Recommended Candidate"),
+        ]
+        
+        # Evaluate all rules
+        for rule_method, display_name in rules_to_check:
+            rule_result = getattr(self, rule_method)(candidate_data)
+            results[display_name] = rule_result
+            if rule_result:
+                explanation.append(f"✓ {display_name}")
+            else:
+                explanation.append(f"✗ {display_name}")
+        
+        # Make final decision using Python-based logic
+        if total_score >= 85 and self.recommended_candidate(candidate_data):
             decision = "HIRE"
-            confidence = 0.95
-            recommendation = "Highly qualified senior developer candidate"
-        elif self.evaluate("web_developer_candidate(X)", candidate_data):
-            decision = "HIRE"
-            confidence = 0.85
-            recommendation = "Good web developer candidate"
-        elif self.evaluate("qualified_developer(X)", candidate_data):
+        elif total_score >= 70 and self.qualified_candidate(candidate_data):
             decision = "CONSIDER"
-            confidence = 0.75
-            recommendation = "Qualified developer, good potential"
+        elif total_score >= 50:
+            decision = "MAYBE"
         else:
             decision = "REJECT"
-            confidence = 0.60
+        
+        # Set confidence and recommendation
+        if decision == "HIRE":
+            confidence = min(0.95, total_score / 100)
+            recommendation = f"Highly recommended candidate for {self.requirements['job_title']}"
+        elif decision == "CONSIDER":
+            confidence = min(0.85, total_score / 100)
+            recommendation = f"Good candidate for {self.requirements['job_title']}, meets most requirements"
+        elif decision == "MAYBE":
+            confidence = min(0.65, total_score / 100)
+            recommendation = f"Potential candidate, some requirements met"
+        else:
+            confidence = max(0.30, total_score / 100)
             recommendation = "Does not meet minimum requirements"
         
         return {
@@ -516,16 +682,80 @@ class PrologEngine:
             'confidence': confidence,
             'recommendation': recommendation,
             'rule_evaluation': results,
-            'explanation': explanation
+            'explanation': explanation,
+            'total_score': round(total_score, 1),
+            'detailed_scores': {k: round(v, 1) for k, v in detailed_scores.items()},
+            'job_title': self.requirements['job_title'],
+            'requirements_used': self.requirements.copy(),
+            'python_engine': True
         }
 
-# Initialize Prolog engine
-prolog_engine = PrologEngine()
+# Initialize Python-based screening engine
+screening_engine = ResumeScreeningEngine(current_requirements)
 
 @app.route('/')
 def index():
     """Main page"""
     return render_template('index.html')
+
+@app.route('/requirements', methods=['GET'])
+def requirements():
+    """Show requirements customization page"""
+    return render_template('requirements.html', current_requirements=current_requirements)
+
+@app.route('/requirements', methods=['POST'])
+def set_requirements():
+    """Update requirements based on form submission"""
+    global current_requirements, prolog_engine
+    
+    try:
+        # Parse form data
+        new_requirements = {
+            'min_education': request.form.get('min_education', 'none'),
+            'min_experience': int(request.form.get('min_experience', 0)),
+            'senior_experience': int(request.form.get('senior_experience', 5)),
+            'job_title': request.form.get('job_title', 'Software Developer'),
+            'job_category': request.form.get('job_category', 'general'),
+            'education_weight': int(request.form.get('education_weight', 20)),
+            'experience_weight': int(request.form.get('experience_weight', 30)),
+            'skills_weight': int(request.form.get('skills_weight', 40)),
+            'preferred_weight': int(request.form.get('preferred_weight', 10))
+        }
+        
+        # Parse skills (comma-separated)
+        required_skills_str = request.form.get('required_skills', '')
+        preferred_skills_str = request.form.get('preferred_skills', '')
+        
+        new_requirements['required_skills'] = [
+            skill.strip() for skill in required_skills_str.split(',') 
+            if skill.strip()
+        ]
+        new_requirements['preferred_skills'] = [
+            skill.strip() for skill in preferred_skills_str.split(',') 
+            if skill.strip()
+        ]
+        
+        # Validate weights
+        total_weight = (new_requirements['education_weight'] + 
+                       new_requirements['experience_weight'] + 
+                       new_requirements['skills_weight'] + 
+                       new_requirements['preferred_weight'])
+        
+        if total_weight != 100:
+            return jsonify({
+                'error': f'Weights must add up to 100%, currently {total_weight}%'
+            }), 400
+        
+        # Update current requirements
+        current_requirements = new_requirements
+        
+        # Update screening engine with new requirements
+        screening_engine.update_requirements(current_requirements)
+        
+        return redirect(url_for('requirements') + '?success=1')
+        
+    except Exception as e:
+        return jsonify({'error': f'Error updating requirements: {str(e)}'}), 500
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_resume():
@@ -554,8 +784,8 @@ def upload_resume():
     candidate_data['filename'] = filename
     candidate_data['upload_time'] = datetime.now().isoformat()
     
-    # Run Prolog screening
-    screening_result = prolog_engine.screen_candidate(candidate_data)
+    # Run Python-based screening
+    screening_result = screening_engine.screen_candidate(candidate_data)
     screening_result['candidate_id'] = candidate_data['id']
     screening_result['screening_time'] = datetime.now().isoformat()
     
@@ -591,6 +821,6 @@ def api_candidates():
     })
 
 if __name__ == '__main__':
-    print("🚀 Starting Prolog Resume Screening System")
+    print("🚀 Starting Resume Screening System")
     print("📊 Open http://localhost:5002 in your browser")
     app.run(host='0.0.0.0', port=5002, debug=True) 

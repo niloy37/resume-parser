@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Customize Requirements - Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cogs"></i> Customize Screening Requirements
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if request.args.get('success') %}
+                    <div class="alert alert-success" style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <strong>✅ Success!</strong> Requirements have been updated successfully.
+                    </div>
+                    {% endif %}
+                    
+                    <form id="requirementsForm" method="POST" action="{{ url_for('set_requirements') }}">
+                        
+                        <!-- Education Requirements -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-graduation-cap"></i> Education Requirements
+                                </h5>
+                                <div class="form-group">
+                                    <label for="min_education">Minimum Education Level:</label>
+                                    <select class="form-control" id="min_education" name="min_education">
+                                        <option value="none" {{ 'selected' if current_requirements.min_education == 'none' else '' }}>No requirement</option>
+                                        <option value="bachelor" {{ 'selected' if current_requirements.min_education == 'bachelor' else '' }}>Bachelor's degree</option>
+                                        <option value="master" {{ 'selected' if current_requirements.min_education == 'master' else '' }}>Master's degree</option>
+                                        <option value="phd" {{ 'selected' if current_requirements.min_education == 'phd' else '' }}>PhD</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Experience Requirements -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-briefcase"></i> Experience Requirements
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="min_experience">Minimum Years of Experience:</label>
+                                            <input type="number" class="form-control" id="min_experience" name="min_experience" 
+                                                   min="0" max="30" value="{{ current_requirements.min_experience or 0 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="senior_experience">Senior Level Experience (years):</label>
+                                            <input type="number" class="form-control" id="senior_experience" name="senior_experience" 
+                                                   min="0" max="30" value="{{ current_requirements.senior_experience or 5 }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Required Skills -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-code"></i> Required Skills
+                                </h5>
+                                <div class="form-group">
+                                    <label for="required_skills">Required Skills (comma-separated):</label>
+                                    <textarea class="form-control" id="required_skills" name="required_skills" rows="3" 
+                                              placeholder="e.g., Python, JavaScript, SQL, React">{{ current_requirements.required_skills|join(', ') if current_requirements.required_skills else '' }}</textarea>
+                                    <small class="form-text text-muted">Enter skills separated by commas. Case insensitive.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferred Skills -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-star"></i> Preferred Skills (Nice to Have)
+                                </h5>
+                                <div class="form-group">
+                                    <label for="preferred_skills">Preferred Skills (comma-separated):</label>
+                                    <textarea class="form-control" id="preferred_skills" name="preferred_skills" rows="3" 
+                                              placeholder="e.g., Docker, AWS, Machine Learning, React">{{ current_requirements.preferred_skills|join(', ') if current_requirements.preferred_skills else '' }}</textarea>
+                                    <small class="form-text text-muted">These skills will boost the candidate's score but aren't required.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Job Position -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-user-tie"></i> Position Details
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="job_title">Job Title:</label>
+                                            <input type="text" class="form-control" id="job_title" name="job_title" 
+                                                   value="{{ current_requirements.job_title or 'Software Developer' }}" 
+                                                   placeholder="e.g., Senior Software Engineer">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="job_category">Job Category:</label>
+                                            <select class="form-control" id="job_category" name="job_category">
+                                                <option value="software_development" {{ 'selected' if current_requirements.job_category == 'software_development' else '' }}>Software Development</option>
+                                                <option value="web_development" {{ 'selected' if current_requirements.job_category == 'web_development' else '' }}>Web Development</option>
+                                                <option value="data_science" {{ 'selected' if current_requirements.job_category == 'data_science' else '' }}>Data Science</option>
+                                                <option value="devops" {{ 'selected' if current_requirements.job_category == 'devops' else '' }}>DevOps</option>
+                                                <option value="mobile_development" {{ 'selected' if current_requirements.job_category == 'mobile_development' else '' }}>Mobile Development</option>
+                                                <option value="general" {{ 'selected' if current_requirements.job_category == 'general' else '' }}>General</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scoring Weights -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-weight"></i> Scoring Weights
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="education_weight">Education Weight:</label>
+                                            <input type="number" class="form-control" id="education_weight" name="education_weight" 
+                                                   min="0" max="100" step="5" value="{{ current_requirements.education_weight or 20 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="experience_weight">Experience Weight:</label>
+                                            <input type="number" class="form-control" id="experience_weight" name="experience_weight" 
+                                                   min="0" max="100" step="5" value="{{ current_requirements.experience_weight or 30 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="skills_weight">Required Skills Weight:</label>
+                                            <input type="number" class="form-control" id="skills_weight" name="skills_weight" 
+                                                   min="0" max="100" step="5" value="{{ current_requirements.skills_weight or 40 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="preferred_weight">Preferred Skills Weight:</label>
+                                            <input type="number" class="form-control" id="preferred_weight" name="preferred_weight" 
+                                                   min="0" max="100" step="5" value="{{ current_requirements.preferred_weight or 10 }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Weights should add up to 100%. They determine how much each factor influences the final score.</small>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save"></i> Save Requirements
+                                </button>
+                                <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg ml-2">
+                                    <i class="fas fa-arrow-left"></i> Back to Home
+                                </a>
+                                <button type="button" class="btn btn-warning btn-lg ml-2" onclick="resetToDefaults()">
+                                    <i class="fas fa-undo"></i> Reset to Defaults
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetToDefaults() {
+    if (confirm('Are you sure you want to reset all requirements to default values?')) {
+        document.getElementById('min_education').value = 'bachelor';
+        document.getElementById('min_experience').value = 2;
+        document.getElementById('senior_experience').value = 5;
+        document.getElementById('required_skills').value = 'Python, JavaScript, SQL';
+        document.getElementById('preferred_skills').value = 'Docker, AWS, React';
+        document.getElementById('job_title').value = 'Software Developer';
+        document.getElementById('job_category').value = 'software_development';
+        document.getElementById('education_weight').value = 20;
+        document.getElementById('experience_weight').value = 30;
+        document.getElementById('skills_weight').value = 40;
+        document.getElementById('preferred_weight').value = 10;
+    }
+}
+
+// Validate weights add up to 100
+document.getElementById('requirementsForm').addEventListener('submit', function(e) {
+    const weights = [
+        parseInt(document.getElementById('education_weight').value) || 0,
+        parseInt(document.getElementById('experience_weight').value) || 0,
+        parseInt(document.getElementById('skills_weight').value) || 0,
+        parseInt(document.getElementById('preferred_weight').value) || 0
+    ];
+    
+    const total = weights.reduce((sum, weight) => sum + weight, 0);
+    
+    if (total !== 100) {
+        e.preventDefault();
+        alert(`Warning: Weights total ${total}% instead of 100%. Please adjust the weights.`);
+    }
+});
+</script>
+{% endblock %} 
